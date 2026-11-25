@@ -14,6 +14,7 @@ import urllib.parse
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Tuple, Any
 from protocol import PacketEvent
+from ml_model import MLThreatModel
 
 
 @dataclass
@@ -57,7 +58,8 @@ class ThreatDetector:
         syn_flood_threshold: int = 40,
         syn_flood_window: float = 2.0,
         entropy_threshold: float = 7.3,
-        anomaly_threshold: float = 0.85,
+        anomaly_threshold: float = 0.80,
+        ml_model_file: Optional[str] = None,
     ):
         self.port_scan_threshold = port_scan_threshold
         self.port_scan_window = port_scan_window
@@ -65,6 +67,9 @@ class ThreatDetector:
         self.syn_flood_window = syn_flood_window
         self.entropy_threshold = entropy_threshold
         self.anomaly_threshold = anomaly_threshold
+
+        # Initialize embedded ML Threat Model
+        self.ml_model = MLThreatModel(model_file=ml_model_file)
 
         # Stateful trackers per Source IP
         # src_ip -> deque of (timestamp, dst_port)
@@ -200,6 +205,26 @@ class ThreatDetector:
                         "dst_port": event.dst_port,
                     },
                 )
+        else:
+            entropy = 0.0
+
+        # 5. Pre-trained Machine Learning Model Evaluation
+        syn_count = len(self.ip_syn_history[src_ip]) if event.protocol_name == "TCP" else 0
+        ml_score, ml_reason = self.ml_model.predict(
+            event=event,
+            unique_ports_rate=len(unique_ports),
+            syn_rate=syn_count,
+            entropy=entropy,
+        )
+
+        if ml_score >= self.anomaly_threshold:
+            return DetectionResult(
+                is_malicious=True,
+                threat_type="ML_ANOMALY_DETECTION",
+                confidence=ml_score,
+                reason=f"ML Anomaly Model: {ml_reason}",
+                details={"ml_score": round(ml_score, 3), "ml_reason": ml_reason},
+            )
 
         # Benign packet
         return DetectionResult(is_malicious=False)

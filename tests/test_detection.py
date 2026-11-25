@@ -192,6 +192,16 @@ class TestMariaIDS(unittest.TestCase):
         self.firewall.cleanup_expired()
         self.assertNotIn(bad_ip, self.firewall.active_bans)
 
+    def test_ml_model_evaluation(self):
+        """Test pre-trained ML model predictions on anomalous flow features."""
+        from ml_model import MLThreatModel
+        ml = MLThreatModel()
+        event = self.create_mock_event(dst_port=445, flags_val=MARIA_TCP_SYN)
+        # Simulate multi-port sweep
+        score, reason = ml.predict(event, unique_ports_rate=12, syn_rate=5)
+        self.assertGreaterEqual(score, 0.80)
+        self.assertIn("Reconnaissance sweep", reason)
+
     def test_binary_protocol_roundtrip(self):
         """Ensure synthesized binary Netlink packet decodes identically."""
         ts = 1700000000123456789

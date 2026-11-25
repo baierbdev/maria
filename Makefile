@@ -1,4 +1,5 @@
-obj-m += src/main.o
+obj-m := maria.o
+maria-objs := src/main.o
 
 # Find kernel build directory (checks running kernel or highest installed version)
 KDIR ?= $(shell if [ -d /lib/modules/$$(uname -r)/build ]; then echo /lib/modules/$$(uname -r)/build; else echo /usr/lib/modules/$$(ls -1 /usr/lib/modules | tail -n 1)/build; fi)
@@ -11,6 +12,7 @@ all:
 clean:
 	@echo "Cleaning kernel module build artifacts"
 	$(MAKE) -C $(KDIR) M=$(PWD) clean
+	rm -f *.o *.ko *.mod *.mod.c *.mod.o .*.cmd Module.symvers modules.order
 	rm -f src/*.o src/.*.cmd src/*.mod src/*.mod.c src/*.mod.o
 
 .PHONY: all clean

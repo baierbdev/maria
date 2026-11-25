@@ -84,7 +84,7 @@ python3 tests/test_detection.py
 
 ```bash
 # Insert module (optional: capture_loopback=1 to capture loopback traffic)
-sudo insmod src/main.ko capture_loopback=1
+sudo insmod maria.ko capture_loopback=1
 
 # Check kernel logs
 dmesg | tail -n 10
@@ -127,5 +127,5 @@ python3 tests/simulate_traffic.py --pid <DAEMON_NETLINK_PID> --scenario all
 ## Unloading the Kernel Module
 
 ```bash
-sudo rmmod main
+sudo rmmod maria
 ```

@@ -51,6 +51,8 @@ maria/
 ├── userspace/
 │   ├── daemon.py                # Main user-space daemon and event loop
 │   ├── detector.py              # Multi-layer threat analysis engine
+│   ├── ml_model.py              # Pre-trained ML threat model & LightGBM runner
+│   ├── train_model.py           # Training pipeline for external datasets (UNSW/CIC-IDS)
 │   ├── firewall.py              # nftables / iptables / dryrun rule manager
 │   ├── logger.py                # Structured JSONL and audit logging
 │   └── protocol.py              # Python Netlink binary serializer/deserializer
@@ -95,13 +97,13 @@ To test the entire pipeline without loading the kernel module into the running k
 ### Live Deployment (Requires Root)
 ```bash
 # Load module (capture_loopback=1 optional for local interface testing)
-sudo insmod src/main.ko capture_loopback=1
+sudo insmod maria.ko capture_loopback=1
 
 # Start daemon with nftables backend
 sudo python3 userspace/daemon.py --backend nftables
 
 # Unload module
-sudo rmmod main
+sudo rmmod maria
 ```
 
 ---
@@ -121,6 +123,7 @@ Detection logic is centralized in `userspace/detector.py`:
 | `COMMAND_INJECTION` | Regex signature matching | `/bin/sh`, `/bin/bash`, `cmd.exe`, `powershell` |
 | `PATH_TRAVERSAL` | Regex signature matching | `../../etc/passwd`, `../../windows/system32` |
 | `HIGH_ENTROPY_PAYLOAD` | Shannon entropy $H(X)$ | Entropy $\ge 7.3$ on non-TLS ports |
+| `ML_ANOMALY_DETECTION` | Pre-trained Decision Ensemble / LightGBM | Multi-feature anomaly score $\ge 0.80$ |
 
 ---
 

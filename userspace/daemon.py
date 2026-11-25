@@ -39,6 +39,7 @@ class MariaDaemon:
         port_scan_threshold: int = 8,
         syn_flood_threshold: int = 40,
         entropy_threshold: float = 7.3,
+        ml_model_file: Optional[str] = None,
     ):
         self.running = False
         self.logger = IDSLogger(log_dir=log_dir, verbose=verbose)
@@ -46,6 +47,7 @@ class MariaDaemon:
             port_scan_threshold=port_scan_threshold,
             syn_flood_threshold=syn_flood_threshold,
             entropy_threshold=entropy_threshold,
+            ml_model_file=ml_model_file,
         )
         self.firewall = FirewallManager(
             backend=backend,
@@ -212,6 +214,12 @@ def main():
         help="Shannon entropy threshold on unencrypted payload (default: 7.3)",
     )
     parser.add_argument(
+        "--ml-model",
+        type=str,
+        default=None,
+        help="Path to pre-trained LightGBM or custom ML model file (e.g. userspace/models/maria_lgbm_model.txt)",
+    )
+    parser.add_argument(
         "--log-dir",
         type=str,
         default="logs",
@@ -237,6 +245,7 @@ def main():
         port_scan_threshold=args.port_scan_threshold,
         syn_flood_threshold=args.syn_flood_threshold,
         entropy_threshold=args.entropy_threshold,
+        ml_model_file=args.ml_model,
     )
     daemon.run()
 
